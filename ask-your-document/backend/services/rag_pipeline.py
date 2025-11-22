@@ -217,33 +217,59 @@ def extract_concepts_and_relationships(chunks: List[str]) -> Dict:
         if len(combined_text) > 5000:
             combined_text = combined_text[:5000]
         
-        # Ask Cohere to extract concepts
-        prompt = f"""Analyze this document and extract:
-1. Key concepts (5-10 main ideas, topics, or entities)
-2. Relationships between these concepts
+        # Ask Cohere to extract concepts with advanced metadata
+        prompt = f"""Analyze this document and extract key concepts with detailed metadata.
 
 Document:
 {combined_text}
 
+Extract 8-15 concepts with:
+1. Label: The concept name
+2. Description: Brief explanation (1-2 sentences)
+3. Importance: Score 1-10 (10 = most critical to understanding the document)
+4. Category: One of [Core Topic, Supporting Idea, Entity, Process, Outcome, Context]
+5. Keywords: 2-4 related terms
+
+Then identify relationships with specific types:
+- "causes" - X leads to Y
+- "requires" - X needs Y
+- "part_of" - X is component of Y
+- "influences" - X affects Y
+- "produces" - X creates Y
+- "related_to" - General connection
+- "contrasts" - X differs from Y
+- "supports" - X reinforces Y
+
 Output format (strict JSON):
 {{
   "concepts": [
-    {{"id": "concept1", "label": "Concept Name", "description": "Brief description"}},
-    {{"id": "concept2", "label": "Another Concept", "description": "Brief description"}}
+    {{
+      "id": "concept1",
+      "label": "Main Concept Name",
+      "description": "Detailed description here",
+      "importance": 10,
+      "category": "Core Topic",
+      "keywords": ["keyword1", "keyword2", "keyword3"]
+    }}
   ],
   "relationships": [
-    {{"source": "concept1", "target": "concept2", "type": "relates to"}},
-    {{"source": "concept2", "target": "concept3", "type": "part of"}}
+    {{
+      "source": "concept1",
+      "target": "concept2",
+      "type": "causes",
+      "strength": 0.9,
+      "description": "Brief explanation of relationship"
+    }}
   ]
 }}
 
-Extract the most important concepts only. Output ONLY valid JSON, no other text."""
+Focus on the MOST important concepts. Output ONLY valid JSON, no markdown or extra text."""
 
         response = co.chat(
             model="command-r-plus-08-2024",
             message=prompt,
             temperature=0.3,
-            max_tokens=1500
+            max_tokens=3000
         )
         
         # Parse JSON response
@@ -265,7 +291,7 @@ Extract the most important concepts only. Output ONLY valid JSON, no other text.
         if "relationships" not in graph_data:
             graph_data["relationships"] = []
         
-        # Add IDs if missing
+        # Add IDs and default values if missing
         for i, concept in enumerate(graph_data["concepts"]):
             if "id" not in concept:
                 concept["id"] = f"concept{i+1}"
@@ -273,6 +299,19 @@ Extract the most important concepts only. Output ONLY valid JSON, no other text.
                 concept["label"] = f"Concept {i+1}"
             if "description" not in concept:
                 concept["description"] = "No description"
+            if "importance" not in concept:
+                concept["importance"] = 5
+            if "category" not in concept:
+                concept["category"] = "Core Topic"
+            if "keywords" not in concept:
+                concept["keywords"] = []
+        
+        # Add default values for relationships
+        for rel in graph_data["relationships"]:
+            if "strength" not in rel:
+                rel["strength"] = 0.7
+            if "description" not in rel:
+                rel["description"] = ""
         
         return graph_data
     

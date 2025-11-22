@@ -80,12 +80,17 @@
 - Range: 0-100%
 - Helps assess answer reliability
 
-#### 4. **Interactive Concept Graph** 🌐
-- Auto-extracts key concepts from documents
-- Visualizes relationships as interactive nodes
-- Click nodes to instantly ask questions
-- Animated interactions (pulse, flash, highlight)
-- Built with React Flow
+#### 4. **Advanced Interactive Concept Graph** 🌐
+- **AI-Powered Extraction**: Automatically identifies 8-15 key concepts
+- **Intelligent Metadata**: Importance scoring (1-10), categories, keywords
+- **8 Relationship Types**: causes, requires, part_of, influences, produces, related_to, contrasts, supports
+- **3 Layout Algorithms**: Force-directed, circular, hierarchical
+- **Visual Intelligence**: Node size by importance, color by category
+- **Interactive Exploration**: Click nodes to ask questions, search/filter concepts
+- **Rich Details Panel**: Full metadata, keywords, category badges
+- **MiniMap & Controls**: Navigate large graphs easily
+- **Animated Interactions**: Pulse, flash, edge highlighting
+- **Export Capability**: Save graph visualizations
 
 #### 5. **File Management**
 - Upload multiple documents per session
@@ -120,6 +125,8 @@
 | **Vite** | 5.4.21 | Build tool |
 | **Tailwind CSS** | 3.4.18 | Styling |
 | **React Flow** | 11.11.4 | Graph visualization |
+| **D3-Force** | 3.0.0 | Physics-based layouts |
+| **D3-Hierarchy** | 3.1.2 | Hierarchical layouts |
 | **Axios** | 1.13.2 | HTTP client |
 | **Lucide React** | 0.294.0 | Icon library |
 
@@ -174,19 +181,12 @@ ask-your-document/
 │   ├── tsconfig.json                # TypeScript config
 │   └── vite.config.ts               # Vite configuration
 │
-├── docs/                             # Documentation
-│   ├── API_DOCUMENTATION.md
-│   ├── COMPLETE_SETUP.md
-│   ├── CONCEPT_GRAPH_FEATURE.md
-│   ├── CONFIDENCE_METRICS.md
-│   ├── DEPLOYMENT.md
-│   ├── METRICS_IMPLEMENTATION.md
-│   ├── PROJECT_STRUCTURE.md
-│   ├── QUICKSTART.md
-│   ├── START_HERE.md
-│   └── UI_DESIGN.md
-│
-└── README.md                         # This file
+├── ADVANCED_CONCEPT_GRAPH.md         # Concept graph documentation
+├── API_DOCUMENTATION.md              # API reference
+├── COMPLETE_SETUP.md                 # Setup guide
+├── CONFIDENCE_METRICS.md             # Metrics documentation
+├── DEPLOYMENT.md                     # Deployment guide
+└── README.md                         # This file (you are here)
 ```
 
 ---
@@ -313,14 +313,22 @@ Every AI response shows:
 - **Purple Badge**: Grounding score (how much is from document)
 - **Source Citations**: Clickable chunks with confidence
 
-### 4. Explore Concept Graph
+### 4. Explore Advanced Concept Graph
 
 ```
 1. Click 🌐 Network icon in chat header
-2. Wait for AI to extract concepts
-3. Interactive graph appears
-4. Click any node to ask about that concept
-5. Watch animations as you explore
+2. Wait for AI to analyze (5-15 seconds)
+3. Interactive graph with 8-15 concepts appears
+4. Nodes sized by importance, colored by category
+
+Interactions:
+✨ Click nodes → Auto-ask questions
+🔍 Search bar → Filter by keywords
+📁 Category dropdown → Filter by type
+🎨 Layout buttons → Switch algorithms
+🗺️ MiniMap → Navigate large graphs
+📊 Node details → View full metadata
+💾 Export → Save visualization
 ```
 
 ### 5. Manage Files
@@ -510,24 +518,49 @@ Visit `http://localhost:8000/docs` for Swagger UI
 - 20-49%: Lightly grounded
 - 0-19%: Conversational
 
-### 2. Interactive Concept Graph
+### 2. Advanced Interactive Concept Graph
 
-**Features:**
-- Auto-extracts 5-10 key concepts
-- Visualizes relationships
-- Click nodes → auto-asks questions
-- Animated interactions
-- Circular layout
+**AI Extraction Features:**
+- 8-15 key concepts with metadata
+- Importance scoring (1-10)
+- 6 categories: Core Topic, Supporting Idea, Entity, Process, Outcome, Context
+- 2-4 keywords per concept
+- 8 relationship types with strength scoring
+- Detailed descriptions for each relationship
+
+**Visual Intelligence:**
+- **Node Sizing**: Larger = more important
+- **Color Coding**: Purple (Core), Blue (Supporting), Green (Entity), Orange (Process), Red (Outcome), Gray (Context)
+- **Edge Styling**: Width = relationship strength, color = relationship type
+- **Animations**: Click = pulse & highlight, strong connections = animated edges
+
+**Layout Algorithms:**
+1. **Force-Directed**: Physics-based natural clustering (D3-force simulation)
+2. **Circular**: Radial layout with importance-based positioning
+3. **Hierarchical**: 3-tier structure by importance levels
+
+**Interactive Features:**
+- **Search**: Find concepts by label, description, or keywords
+- **Filter**: Show/hide by category
+- **Details Panel**: Full metadata on click
+- **MiniMap**: Overview and quick navigation
+- **Export**: Save current view
+- **Pan & Zoom**: Explore large graphs
+- **Auto-Questions**: Click → instant question generation
 
 **Usage:**
 ```
-1. Click 🌐 icon
-2. AI analyzes documents
-3. Graph displays concepts
-4. Click any node
-5. Question auto-generated
-6. Watch animations
+1. Click 🌐 icon in chat
+2. AI extracts concepts (5-15 sec)
+3. Choose layout (force/circular/hierarchical)
+4. Search or filter as needed
+5. Click nodes to explore
+6. View details panel
+7. Follow relationship chains
+8. Export when done
 ```
+
+**[📘 Full Documentation](./ADVANCED_CONCEPT_GRAPH.md)**
 
 ### 3. Multi-File Management
 
@@ -623,25 +656,40 @@ Visit `http://localhost:8000/docs` for Swagger UI
 7. Response with citations
 ```
 
-### Concept Graph Pipeline
+### Advanced Concept Graph Pipeline
 
 ```
 1. User clicks graph button
    ↓
-2. Backend retrieves all chunks
+2. Backend retrieves all document chunks
    ↓
-3. Cohere analyzes text
+3. Chunks combined (up to 15,000 chars)
    ↓
-4. Extracts:
-   - Key concepts
-   - Relationships
+4. Sent to Cohere with specialized prompt
+   ↓
+5. AI extracts (3000 token response):
+   - 8-15 concepts with metadata
+   - Importance scores (1-10)
+   - Categories (6 types)
+   - Keywords (2-4 per concept)
+   - Relationships (8 types)
+   - Strength scores (0-1)
    - Descriptions
    ↓
-5. Returns structured JSON
+6. Parse & validate JSON
    ↓
-6. React Flow visualizes
+7. Return to frontend
    ↓
-7. User interacts with graph
+8. Calculate layout (D3-force, circular, or hierarchical)
+   ↓
+9. Render with React Flow
+   ↓
+10. User interactions:
+    - Search/filter
+    - Click nodes
+    - Switch layouts
+    - View details
+    - Export graph
 ```
 
 ---
@@ -672,9 +720,11 @@ Visit `http://localhost:8000/docs` for Swagger UI
 
 - **Fade In**: Messages, uploads
 - **Slide In**: File cards
-- **Pulse**: Node highlights
-- **Scale**: Hover effects
-- **Flow**: Edge animations
+- **Pulse**: Node highlights (clicked concepts)
+- **Scale**: Hover effects, importance-based sizing
+- **Flow**: Edge animations (strong relationships)
+- **Flash**: Connected edge highlighting
+- **Transform**: Layout transitions (0.3s ease)
 
 ### Accessibility
 
@@ -863,37 +913,14 @@ Numerical representations of text that capture semantic meaning.
 Finding information by meaning, not just keywords.
 
 **Concept Extraction:**
-Using AI to identify key topics and relationships in text.
+Using AI to identify key topics, importance scores, categories, and relationships in text.
 
----
+**Knowledge Graphs:**
+Visual networks representing concepts (nodes) and their relationships (edges).
 
-## 🎯 Roadmap
+**Force-Directed Layout:**
+Physics-based algorithm where nodes repel and links attract for natural clustering.
 
-### Planned Features
+**Semantic Relationships:**
+Typed connections (causes, requires, influences, etc.) that capture meaning between concepts.
 
-- [ ] Dark mode
-- [ ] Export chat history
-- [ ] Document preview
-- [ ] Voice input
-- [ ] Mobile app
-- [ ] PDF annotations
-- [ ] Collaborative sessions
-- [ ] Admin dashboard
-- [ ] Analytics tracking
-- [ ] Custom embedding models
-
----
-
-## ⭐ Star History
-
-If you find this project useful, please give it a star! ⭐
-
----
-
-<div align="center">
-
-**Built with ❤️ using FastAPI, React, Cohere & Weaviate**
-
-[⬆ Back to Top](#ask-your-documents---ai-powered-document-chat-system-)
-
-</div>

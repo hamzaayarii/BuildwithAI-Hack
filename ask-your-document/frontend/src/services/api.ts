@@ -88,12 +88,17 @@ export interface ConceptNode {
   id: string;
   label: string;
   description: string;
+  importance: number;  // 1-10 score
+  category: string;    // Core Topic, Supporting Idea, Entity, Process, Outcome, Context
+  keywords: string[];  // Related terms
 }
 
 export interface ConceptRelationship {
   source: string;
   target: string;
-  type: string;
+  type: string;        // causes, requires, part_of, influences, produces, related_to, contrasts, supports
+  strength: number;    // 0-1 score
+  description: string; // Explanation of relationship
 }
 
 export interface ConceptGraphResponse {
