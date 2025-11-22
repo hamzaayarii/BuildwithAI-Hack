@@ -1,0 +1,225 @@
+.leaderboard-page {
+  min-height: 100vh;
+  padding: 2rem;
+  background: var(--background);
+}
+
+.leaderboard-header {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.leaderboard-header h1 {
+  font-size: 2.5rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  flex: 1;
+}
+
+.back-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--surface);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.back-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.mode-selector {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.mode-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--surface);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.mode-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary-color);
+  color: var(--text-primary);
+}
+
+.mode-btn.active {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border-color: transparent;
+  box-shadow: var(--shadow-md);
+}
+
+.leaderboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.leaderboard-table {
+  background: var(--card-bg);
+  backdrop-filter: blur(30px);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 80px 1fr 150px 100px 100px;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 150px 100px 100px;
+  gap: 1rem;
+  padding: 1.25rem 1rem;
+  background: var(--surface);
+  border-radius: 0.75rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  align-items: center;
+}
+
+.table-row:hover {
+  transform: translateX(4px);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.table-row.top-three {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+  border-color: var(--primary-color);
+}
+
+.rank-col {
+  font-weight: 800;
+  font-size: 1.25rem;
+  text-align: center;
+}
+
+.player-col {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.player-avatar {
+  font-size: 2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+}
+
+.player-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.score-col {
+  font-weight: 800;
+  font-size: 1.25rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+}
+
+.level-col,
+.lines-col {
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.loading,
+.no-scores {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .leaderboard-page {
+    padding: 1rem;
+  }
+
+  .table-header,
+  .table-row {
+    grid-template-columns: 60px 1fr 100px 80px 80px;
+    font-size: 0.85rem;
+    gap: 0.5rem;
+  }
+
+  .rank-col {
+    font-size: 1rem;
+  }
+
+  .player-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+
+  .score-col {
+    font-size: 1rem;
+  }
+
+  .leaderboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mode-selector {
+    width: 100%;
+  }
+
+  .mode-btn {
+    flex: 1;
+  }
+}
+

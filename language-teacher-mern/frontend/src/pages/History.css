@@ -1,0 +1,209 @@
+.history-page {
+  min-height: 100vh;
+  background: var(--background);
+  background-attachment: fixed;
+  padding: var(--spacing-xl);
+  position: relative;
+}
+
+.history-page h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: var(--spacing-xl);
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.5));
+}
+
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.stat-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(30px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-primary);
+  transform: scaleX(0);
+  transition: transform var(--transition-base);
+  box-shadow: var(--shadow-glow);
+}
+
+.stat-card:hover::before {
+  transform: scaleX(1);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
+}
+
+.stat-number {
+  font-size: 3rem;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--spacing-sm);
+  filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.6));
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.evaluations-list h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-lg);
+  color: var(--text-primary);
+}
+
+.evaluation-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(30px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+  animation: fadeIn var(--transition-base);
+}
+
+.evaluation-card:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.evaluation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border);
+}
+
+.evaluation-language {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-primary);
+}
+
+.evaluation-date {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.evaluation-score {
+  font-size: 2.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+.evaluation-summary {
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-lg);
+  line-height: 1.7;
+  font-size: 1.05rem;
+}
+
+.evaluation-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-xl);
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border);
+}
+
+.evaluation-details > div {
+  background: var(--surface);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.evaluation-details strong {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.evaluation-details ul {
+  margin-top: var(--spacing-sm);
+  padding-left: var(--spacing-lg);
+  list-style: none;
+}
+
+.evaluation-details li {
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-secondary);
+  position: relative;
+  padding-left: var(--spacing-md);
+  line-height: 1.6;
+}
+
+.evaluation-details li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .history-page h1 {
+    font-size: 2rem;
+  }
+
+  .stats-overview {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+  }
+
+  .evaluation-details {
+    grid-template-columns: 1fr;
+  }
+
+  .evaluation-header {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .evaluation-score {
+    font-size: 2rem;
+  }
+}

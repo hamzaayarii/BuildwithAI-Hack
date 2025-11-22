@@ -1,0 +1,233 @@
+.dashboard {
+  min-height: 100vh;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-avatar {
+  font-size: 3rem;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  backdrop-filter: blur(30px);
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+}
+
+.user-info h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.user-stats {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.user-stats span {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.dashboard-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--surface);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.nav-btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.dashboard-title {
+  text-align: center;
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 3rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.game-modes {
+  margin-bottom: 3rem;
+}
+
+.mode-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.mode-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(30px);
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-align: center;
+}
+
+.mode-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
+
+.mode-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.mode-card h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.mode-card p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.mode-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.mode-features span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.mode-features span::before {
+  content: '✓ ';
+  color: var(--success);
+  font-weight: 700;
+  margin-right: 0.5rem;
+}
+
+.dashboard-footer {
+  background: var(--card-bg);
+  backdrop-filter: blur(30px);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+}
+
+.controls-info h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
+}
+
+.control-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+}
+
+.control-item kbd {
+  padding: 0.5rem 1rem;
+  background: var(--background-solid);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  font-family: 'Inter', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+  min-width: 60px;
+  text-align: center;
+}
+
+.control-item span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 1rem;
+  }
+
+  .dashboard-title {
+    font-size: 2rem;
+  }
+
+  .mode-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+

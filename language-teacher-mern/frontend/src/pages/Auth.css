@@ -1,0 +1,189 @@
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  background: var(--background);
+  background-attachment: fixed;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 20%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+  animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.auth-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(30px);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-2xl);
+  width: 100%;
+  max-width: 480px;
+  box-shadow: var(--shadow-lg), var(--shadow-glow-purple);
+  border: 2px solid var(--border);
+  position: relative;
+  z-index: 1;
+  animation: fadeIn var(--transition-base);
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gradient-primary);
+  opacity: 0.05;
+  border-radius: var(--radius-xl);
+  z-index: -1;
+}
+
+.auth-card h1 {
+  text-align: center;
+  margin-bottom: var(--spacing-sm);
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.6));
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xl);
+  font-size: 1.125rem;
+}
+
+.form-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+}
+
+.avatar-option {
+  position: relative;
+  cursor: pointer;
+}
+
+.avatar-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.avatar-emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 1.75rem;
+  transition: all var(--transition-base);
+  background: var(--surface);
+}
+
+.avatar-option:hover .avatar-emoji {
+  border-color: var(--primary-color);
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+}
+
+.avatar-option input[type="radio"]:checked + .avatar-emoji {
+  border-color: var(--secondary-color);
+  background: var(--primary-light);
+  box-shadow: var(--shadow-glow-purple), inset 0 0 15px rgba(139, 92, 246, 0.3);
+  transform: scale(1.2);
+  border-width: 3px;
+}
+
+.error-message {
+  background: var(--error-light);
+  border: 1px solid var(--error);
+  color: var(--error);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+  font-weight: 500;
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: var(--spacing-xl);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.auth-footer a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color var(--transition-fast);
+}
+
+.auth-footer a:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: var(--spacing-xl);
+  }
+
+  .auth-card h1 {
+    font-size: 2rem;
+  }
+
+  .avatar-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
