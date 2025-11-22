@@ -199,6 +199,93 @@ def calculate_source_coverage(answer: str, retrieved_chunks: List[Dict]) -> floa
     
     return round(coverage_score, 1)
 
+def extract_concepts_and_relationships(chunks: List[str]) -> Dict:
+    """
+    Extract key concepts and their relationships from document chunks using Cohere.
+    
+    Args:
+        chunks: List of text chunks from the document
+    
+    Returns:
+        Dictionary with nodes (concepts) and edges (relationships)
+    """
+    try:
+        co = get_cohere_client()
+        
+        # Combine chunks into analysis text (limit to avoid token limits)
+        combined_text = "\n\n".join(chunks[:10])  # Analyze first 10 chunks
+        if len(combined_text) > 5000:
+            combined_text = combined_text[:5000]
+        
+        # Ask Cohere to extract concepts
+        prompt = f"""Analyze this document and extract:
+1. Key concepts (5-10 main ideas, topics, or entities)
+2. Relationships between these concepts
+
+Document:
+{combined_text}
+
+Output format (strict JSON):
+{{
+  "concepts": [
+    {{"id": "concept1", "label": "Concept Name", "description": "Brief description"}},
+    {{"id": "concept2", "label": "Another Concept", "description": "Brief description"}}
+  ],
+  "relationships": [
+    {{"source": "concept1", "target": "concept2", "type": "relates to"}},
+    {{"source": "concept2", "target": "concept3", "type": "part of"}}
+  ]
+}}
+
+Extract the most important concepts only. Output ONLY valid JSON, no other text."""
+
+        response = co.chat(
+            model="command-r-plus-08-2024",
+            message=prompt,
+            temperature=0.3,
+            max_tokens=1500
+        )
+        
+        # Parse JSON response
+        import json
+        import re
+        
+        response_text = response.text.strip()
+        
+        # Extract JSON from response (in case AI added extra text)
+        json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+        if json_match:
+            response_text = json_match.group(0)
+        
+        graph_data = json.loads(response_text)
+        
+        # Validate and ensure we have the right structure
+        if "concepts" not in graph_data:
+            graph_data["concepts"] = []
+        if "relationships" not in graph_data:
+            graph_data["relationships"] = []
+        
+        # Add IDs if missing
+        for i, concept in enumerate(graph_data["concepts"]):
+            if "id" not in concept:
+                concept["id"] = f"concept{i+1}"
+            if "label" not in concept:
+                concept["label"] = f"Concept {i+1}"
+            if "description" not in concept:
+                concept["description"] = "No description"
+        
+        return graph_data
+    
+    except Exception as e:
+        print(f"Error extracting concepts: {e}")
+        # Return default structure
+        return {
+            "concepts": [
+                {"id": "main", "label": "Document Main Topic", "description": "Central theme of the document"}
+            ],
+            "relationships": []
+        }
+
 def format_sources(retrieved_chunks: List[Dict]) -> List[Dict]:
     """Format source chunks for frontend display with confidence scores"""
     return [

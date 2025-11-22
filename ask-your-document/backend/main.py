@@ -5,7 +5,7 @@ from services.weaviate_client import (
     delete_session_documents, delete_file_documents, get_session_files
 )
 from services.document_processor import process_document
-from services.rag_pipeline import generate_answer, format_sources, get_embeddings, get_query_embedding
+from services.rag_pipeline import generate_answer, format_sources, get_embeddings, get_query_embedding, extract_concepts_and_relationships
 import uuid
 import os
 from dotenv import load_dotenv
@@ -258,6 +258,50 @@ async def delete_session(session_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting session: {str(e)}")
 
+@app.get("/sessions/{session_id}/concepts")
+async def get_concept_graph(session_id: str):
+    """
+    Generate an interactive concept graph from uploaded documents.
+    Extracts key concepts and their relationships using AI.
+    """
+    try:
+        # Get all chunks for this session
+        response = (
+            weaviate_client.query
+            .get("Documents", ["content"])
+            .with_where({
+                "path": ["session_id"],
+                "operator": "Equal",
+                "valueText": session_id
+            })
+            .with_limit(50)  # Limit for performance
+            .do()
+        )
+        
+        results = response.get("data", {}).get("Get", {}).get("Documents", [])
+        
+        if not results:
+            return {
+                "concepts": [],
+                "relationships": [],
+                "message": "No documents found for this session"
+            }
+        
+        # Extract text chunks
+        chunks = [doc["content"] for doc in results]
+        
+        # Generate concept graph using AI
+        graph_data = extract_concepts_and_relationships(chunks)
+        
+        return {
+            "concepts": graph_data.get("concepts", []),
+            "relationships": graph_data.get("relationships", []),
+            "total_chunks_analyzed": len(chunks)
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating concept graph: {str(e)}")
+
 @app.get("/health")
 async def health():
     """Detailed health check"""
@@ -269,6 +313,7 @@ async def health():
             "multiple_files": True,
             "supported_formats": [".txt", ".pdf", ".docx"],
             "multilingual": True,
-            "languages": ["English", "French", "Arabic", "100+ more"]
+            "languages": ["English", "French", "Arabic", "100+ more"],
+            "concept_graph": True
         }
     }

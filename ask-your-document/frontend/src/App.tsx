@@ -4,8 +4,9 @@ import FileManager from './components/FileManager';
 import ChatWindow, { Message } from './components/ChatWindow';
 import ChatInput from './components/ChatInput';
 import MetricsInfo from './components/MetricsInfo';
+import ConceptGraph from './components/ConceptGraph';
 import { uploadDocument, askQuestion, getSessionFiles, deleteFile, deleteSession, FileInfo } from './services/api';
-import { FileText, AlertCircle, Trash2, Plus, MessageCircle, FolderOpen, Sparkles } from 'lucide-react';
+import { FileText, AlertCircle, Trash2, Plus, MessageCircle, FolderOpen, Sparkles, Network } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -15,6 +16,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [showUpload, setShowUpload] = useState(false);
+  const [showGraph, setShowGraph] = useState(false);
+  const [lastQuestion, setLastQuestion] = useState<string>('');
 
   // Load files when session exists
   useEffect(() => {
@@ -72,6 +75,9 @@ function App() {
   const handleAsk = async (question: string) => {
     if (!sessionId) return;
 
+    // Store last question for graph animation
+    setLastQuestion(question);
+
     // Add user message
     setMessages((prev) => [...prev, { role: 'user', content: question }]);
     setLoading(true);
@@ -105,6 +111,12 @@ function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNodeClick = (conceptLabel: string) => {
+    // Auto-fill question based on clicked concept
+    const question = `Tell me about ${conceptLabel}`;
+    handleAsk(question);
   };
 
   const handleDeleteFile = async (fileId: string) => {
@@ -251,9 +263,22 @@ function App() {
                   </h2>
                   <div className="flex items-center gap-3">
                     {files.length > 0 && (
-                      <span className="text-sm text-gray-500">
-                        {files.length} {files.length === 1 ? 'document' : 'documents'} loaded
-                      </span>
+                      <>
+                        <span className="text-sm text-gray-500">
+                          {files.length} {files.length === 1 ? 'document' : 'documents'} loaded
+                        </span>
+                        <button
+                          onClick={() => setShowGraph(!showGraph)}
+                          className={`p-2 rounded-lg transition-all duration-300 ${
+                            showGraph
+                              ? 'bg-indigo-100 text-indigo-600'
+                              : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'
+                          }`}
+                          title="Toggle Concept Graph"
+                        >
+                          <Network className="w-5 h-5" />
+                        </button>
+                      </>
                     )}
                     <MetricsInfo />
                   </div>
@@ -275,7 +300,31 @@ function App() {
                   </div>
                 ) : (
                   <>
-                    <ChatWindow messages={messages} />
+                    {showGraph ? (
+                      <div className="space-y-4">
+                        <div className="h-[400px]">
+                          <ConceptGraph
+                            sessionId={sessionId}
+                            onNodeClick={handleNodeClick}
+                            lastQuestion={lastQuestion}
+                          />
+                        </div>
+                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl p-4">
+                          <div className="flex items-start gap-3">
+                            <Sparkles className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-semibold text-indigo-900">Interactive Concept Graph</p>
+                              <p className="text-xs text-indigo-700 mt-1">
+                                Click any node to instantly ask questions about that concept. Watch the graph animate as you explore!
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <ChatWindow messages={messages} />
+                      </div>
+                    ) : (
+                      <ChatWindow messages={messages} />
+                    )}
                     <ChatInput
                       onSend={handleAsk}
                       disabled={!sessionId || files.length === 0}

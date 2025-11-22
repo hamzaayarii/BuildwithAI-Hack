@@ -84,6 +84,29 @@ export const deleteSession = async (sessionId: string): Promise<void> => {
   await axios.delete(`${API_URL}/sessions/${sessionId}`);
 };
 
+export interface ConceptNode {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export interface ConceptRelationship {
+  source: string;
+  target: string;
+  type: string;
+}
+
+export interface ConceptGraphResponse {
+  concepts: ConceptNode[];
+  relationships: ConceptRelationship[];
+  total_chunks_analyzed: number;
+}
+
+export const getConceptGraph = async (sessionId: string): Promise<ConceptGraphResponse> => {
+  const response = await axios.get<ConceptGraphResponse>(`${API_URL}/sessions/${sessionId}/concepts`);
+  return response.data;
+};
+
 export const checkHealth = async (): Promise<{ status: string }> => {
   const response = await axios.get(`${API_URL}/health`);
   return response.data;
