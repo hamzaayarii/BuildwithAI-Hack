@@ -26,8 +26,17 @@ export interface ChatResponse {
     chunk_index: number;
     content: string;
     full_content: string;
+    confidence: number;
+    similarity_score: number;
   }>;
   retrieved_chunks: number;
+  confidence_score: number;
+  source_coverage: number;
+  metrics: {
+    avg_chunk_similarity: number;
+    document_grounding: number;
+    chunks_used: number;
+  };
 }
 
 export interface FilesResponse {

@@ -3,6 +3,7 @@ import FileUpload from './components/FileUpload';
 import FileManager from './components/FileManager';
 import ChatWindow, { Message } from './components/ChatWindow';
 import ChatInput from './components/ChatInput';
+import MetricsInfo from './components/MetricsInfo';
 import { uploadDocument, askQuestion, getSessionFiles, deleteFile, deleteSession, FileInfo } from './services/api';
 import { FileText, AlertCircle, Trash2, Plus, MessageCircle, FolderOpen, Sparkles } from 'lucide-react';
 import './index.css';
@@ -79,13 +80,15 @@ function App() {
     try {
       const response = await askQuestion(question, sessionId);
 
-      // Add assistant message with sources
+      // Add assistant message with sources and metrics
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
           content: response.answer,
           sources: response.sources,
+          confidence_score: response.confidence_score,
+          source_coverage: response.source_coverage,
         },
       ]);
     } catch (err: any) {
@@ -246,11 +249,14 @@ function App() {
                     <MessageCircle className="w-5 h-5 text-indigo-500" />
                     Chat
                   </h2>
-                  {files.length > 0 && (
-                    <span className="text-sm text-gray-500">
-                      {files.length} {files.length === 1 ? 'document' : 'documents'} loaded
-                    </span>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {files.length > 0 && (
+                      <span className="text-sm text-gray-500">
+                        {files.length} {files.length === 1 ? 'document' : 'documents'} loaded
+                      </span>
+                    )}
+                    <MetricsInfo />
+                  </div>
                 </div>
 
                 {!sessionId ? (

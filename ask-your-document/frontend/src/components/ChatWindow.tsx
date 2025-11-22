@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { User, Bot, FileText, Sparkles } from 'lucide-react';
+import { User, Bot, FileText, Sparkles, TrendingUp, Target } from 'lucide-react';
 
 export interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -7,7 +7,11 @@ export interface Message {
   sources?: Array<{
     chunk_index: number;
     content: string;
+    confidence?: number;
+    similarity_score?: number;
   }>;
+  confidence_score?: number;
+  source_coverage?: number;
 }
 
 interface ChatWindowProps {
@@ -76,6 +80,24 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages }) => {
                 >
                   <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
 
+                  {/* Confidence Metrics */}
+                  {msg.role === 'assistant' && msg.confidence_score !== undefined && msg.source_coverage !== undefined && (
+                    <div className="mt-3 flex gap-3 text-xs">
+                      <div className="flex items-center gap-1 bg-blue-50 px-3 py-1.5 rounded-full">
+                        <TrendingUp className="w-3 h-3 text-blue-600" />
+                        <span className="text-blue-700 font-medium">
+                          {msg.confidence_score}% Match
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 bg-purple-50 px-3 py-1.5 rounded-full">
+                        <Target className="w-3 h-3 text-purple-600" />
+                        <span className="text-purple-700 font-medium">
+                          {msg.source_coverage}% Grounded
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Sources */}
                   {msg.sources && msg.sources.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-gray-200">
@@ -86,8 +108,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages }) => {
                       <div className="space-y-2">
                         {msg.sources.map((source, idx) => (
                           <details key={idx} className="text-xs bg-gray-50 rounded-lg p-2">
-                            <summary className="cursor-pointer text-indigo-600 hover:text-indigo-800 font-medium">
-                              📄 Chunk {source.chunk_index + 1}
+                            <summary className="cursor-pointer text-indigo-600 hover:text-indigo-800 font-medium flex items-center justify-between">
+                              <span>📄 Chunk {source.chunk_index + 1}</span>
+                              {source.confidence !== undefined && (
+                                <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full ml-2">
+                                  {source.confidence}% similar
+                                </span>
+                              )}
                             </summary>
                             <p className="mt-2 pl-3 text-gray-600 italic border-l-2 border-indigo-200">
                               "{source.content}"

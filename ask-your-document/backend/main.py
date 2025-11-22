@@ -161,7 +161,7 @@ async def chat(question: str = Form(...), session_id: str = Form(...)):
         # Generate embedding for the question
         question_embedding = get_query_embedding(question)
         
-        # Query Weaviate for relevant chunks using manual vector
+        # Query Weaviate for relevant chunks using manual vector with similarity scores
         response = (
             weaviate_client.query
             .get("Documents", ["content", "chunk_index", "filename"])
@@ -172,6 +172,7 @@ async def chat(question: str = Form(...), session_id: str = Form(...)):
                 "valueText": session_id
             })
             .with_limit(4)
+            .with_additional(["certainty", "distance"])  # Get similarity scores
             .do()
         )
         
@@ -181,31 +182,46 @@ async def chat(question: str = Form(...), session_id: str = Form(...)):
             return {
                 "answer": "No relevant information found in the document for this question.",
                 "sources": [],
-                "retrieved_chunks": 0
+                "retrieved_chunks": 0,
+                "confidence_score": 0.0,
+                "source_coverage": 0.0
             }
         
-        # Extract retrieved chunks
+        # Extract retrieved chunks with similarity scores
         retrieved_chunks = [
             {
                 "content": obj["content"],
                 "chunk_index": obj["chunk_index"],
-                "filename": obj.get("filename", "unknown")
+                "filename": obj.get("filename", "unknown"),
+                "certainty": obj.get("_additional", {}).get("certainty", 0.0),
+                "distance": obj.get("_additional", {}).get("distance", 1.0)
             }
             for obj in results
         ]
         
+        # Calculate average confidence score (certainty)
+        avg_confidence = sum(chunk["certainty"] for chunk in retrieved_chunks) / len(retrieved_chunks)
+        confidence_score = round(avg_confidence * 100, 1)  # Convert to percentage
+        
         filename = retrieved_chunks[0]["filename"] if retrieved_chunks else "document"
         
-        # Generate answer using RAG pipeline
-        answer = generate_answer(question, retrieved_chunks, filename)
+        # Generate answer using RAG pipeline with coverage tracking
+        answer, source_coverage = generate_answer(question, retrieved_chunks, filename)
         
-        # Format sources for frontend
+        # Format sources for frontend with confidence scores
         sources = format_sources(retrieved_chunks)
         
         return {
             "answer": answer,
             "sources": sources,
-            "retrieved_chunks": len(retrieved_chunks)
+            "retrieved_chunks": len(retrieved_chunks),
+            "confidence_score": confidence_score,
+            "source_coverage": source_coverage,
+            "metrics": {
+                "avg_chunk_similarity": confidence_score,
+                "document_grounding": source_coverage,
+                "chunks_used": len(retrieved_chunks)
+            }
         }
     
     except Exception as e:

@@ -38,7 +38,7 @@ def get_query_embedding(query: str) -> List[float]:
     )
     return response.embeddings[0]
 
-def generate_answer(question: str, retrieved_chunks: List[Dict], filename: str) -> str:
+def generate_answer(question: str, retrieved_chunks: List[Dict], filename: str) -> tuple[str, float]:
     """
     Generate answer using RAG pipeline with retrieved chunks and Cohere.
     Supports multilingual questions and documents (English, French, Arabic, etc.)
@@ -51,7 +51,9 @@ def generate_answer(question: str, retrieved_chunks: List[Dict], filename: str) 
         filename: Name of the source document
     
     Returns:
-        Generated answer with citations (in the same language as the question)
+        Tuple of (answer, source_coverage_percentage)
+        - answer: Generated answer with citations
+        - source_coverage: Percentage of answer grounded in document (0-100)
     """
     # Build context from retrieved chunks
     if retrieved_chunks:
@@ -109,18 +111,103 @@ User: {question}"""
             max_tokens=500
         )
         
-        return response.text
+        answer = response.text
+        
+        # Calculate source coverage based on citations and content
+        source_coverage = calculate_source_coverage(answer, retrieved_chunks)
+        
+        return answer, source_coverage
     
     except Exception as e:
-        return f"Error generating answer: {str(e)}"
+        return f"Error generating answer: {str(e)}", 0.0
+
+def calculate_source_coverage(answer: str, retrieved_chunks: List[Dict]) -> float:
+    """
+    Calculate what percentage of the answer is grounded in the document.
+    
+    Args:
+        answer: The generated answer
+        retrieved_chunks: The chunks that were provided as context
+    
+    Returns:
+        Percentage (0-100) indicating document grounding vs inference
+    """
+    if not retrieved_chunks:
+        return 0.0
+    
+    # Count citation markers [Chunk X]
+    import re
+    citation_count = len(re.findall(r'\[Chunk \d+\]', answer))
+    
+    # Check for phrases indicating document usage
+    document_phrases = [
+        'according to', 'based on', 'the document', 'states that', 
+        'mentions', 'indicates', 'shows that', 'explains', 'describes',
+        'chunk', 'source', 'text says'
+    ]
+    document_indicators = sum(1 for phrase in document_phrases if phrase.lower() in answer.lower())
+    
+    # Check for phrases indicating inference/conversation
+    inference_phrases = [
+        'i think', 'i believe', 'generally', 'typically', 'usually',
+        'in my understanding', 'it seems', 'probably', 'might be',
+        "i don't know", 'not sure', 'unclear'
+    ]
+    inference_indicators = sum(1 for phrase in inference_phrases if phrase.lower() in answer.lower())
+    
+    # Short conversational answers are 0% document grounded
+    if len(answer.split()) < 15 and not citation_count:
+        # Likely a greeting or simple response
+        return 0.0
+    
+    # Calculate coverage score
+    # Heavy weight on citations, moderate on document phrases
+    coverage_score = 0.0
+    
+    # Citations are strong indicators (up to 60%)
+    if citation_count > 0:
+        coverage_score += min(60, citation_count * 20)
+    
+    # Document phrases add confidence (up to 30%)
+    if document_indicators > 0:
+        coverage_score += min(30, document_indicators * 10)
+    
+    # Inference phrases reduce confidence
+    coverage_score -= (inference_indicators * 10)
+    
+    # If answer contains significant chunk content, boost score
+    total_context_length = sum(len(chunk.get('content', '')) for chunk in retrieved_chunks)
+    if total_context_length > 0:
+        # Check if answer contains substantial portions of chunk text
+        chunk_overlap = 0
+        for chunk in retrieved_chunks:
+            chunk_content = chunk.get('content', '').lower()
+            if chunk_content:
+                # Sample some phrases from the chunk
+                chunk_words = chunk_content.split()
+                if len(chunk_words) > 5:
+                    for i in range(len(chunk_words) - 5):
+                        phrase = ' '.join(chunk_words[i:i+5])
+                        if phrase in answer.lower():
+                            chunk_overlap += 1
+        
+        if chunk_overlap > 0:
+            coverage_score += min(20, chunk_overlap * 5)
+    
+    # Clamp between 0 and 100
+    coverage_score = max(0, min(100, coverage_score))
+    
+    return round(coverage_score, 1)
 
 def format_sources(retrieved_chunks: List[Dict]) -> List[Dict]:
-    """Format source chunks for frontend display"""
+    """Format source chunks for frontend display with confidence scores"""
     return [
         {
             "chunk_index": chunk["chunk_index"],
             "content": chunk["content"][:200] + "..." if len(chunk["content"]) > 200 else chunk["content"],
-            "full_content": chunk["content"]
+            "full_content": chunk["content"],
+            "confidence": round(chunk.get("certainty", 0.0) * 100, 1),  # Convert to percentage
+            "similarity_score": chunk.get("certainty", 0.0)
         }
         for chunk in retrieved_chunks
     ]
