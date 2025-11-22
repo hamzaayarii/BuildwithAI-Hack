@@ -1,12 +1,17 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from services.weaviate_client import get_weaviate_client, create_document_collection, delete_session_documents
+from services.weaviate_client import (
+    get_weaviate_client, create_document_collection, 
+    delete_session_documents, delete_file_documents, get_session_files
+)
 from services.document_processor import process_document
 from services.rag_pipeline import generate_answer, format_sources, get_embeddings, get_query_embedding
 import uuid
 import os
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
+from datetime import datetime
+from typing import Optional
 
 # Load environment variables
 load_dotenv()
@@ -59,14 +64,17 @@ async def root():
     }
 
 @app.post("/upload")
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(
+    file: UploadFile = File(...),
+    session_id: Optional[str] = Form(None)
+):
     """
-    Upload and process a document.
+    Upload and process a document. Supports multiple files per session.
     
-    - Parses .txt or .pdf files
+    - Parses .txt, .pdf, or .docx files
     - Chunks the text
     - Stores embeddings in Weaviate
-    - Returns session_id for subsequent queries
+    - Returns session_id and file_id
     """
     try:
         # Validate file type
@@ -78,6 +86,7 @@ async def upload_document(file: UploadFile = File(...)):
         
         # Read file content
         content = await file.read()
+        file_size = len(content)
         
         # Process document (parse and chunk)
         full_text, chunks = process_document(content, file.filename)
@@ -88,11 +97,16 @@ async def upload_document(file: UploadFile = File(...)):
                 detail="Document is empty or could not be parsed"
             )
         
-        # Generate unique session ID
-        session_id = str(uuid.uuid4())
+        # Create session ID if not provided (for first upload)
+        if not session_id:
+            session_id = str(uuid.uuid4())
+        
+        # Generate unique file ID
+        file_id = str(uuid.uuid4())
+        upload_date = datetime.now().isoformat()
         
         # Generate embeddings for all chunks using Cohere
-        print(f"Generating embeddings for {len(chunks)} chunks...")
+        print(f"Generating embeddings for {len(chunks)} chunks from '{file.filename}'...")
         chunk_embeddings = get_embeddings(chunks)
         
         # Store chunks in Weaviate using batch with manual vectors
@@ -104,7 +118,10 @@ async def upload_document(file: UploadFile = File(...)):
                         "content": chunk,
                         "chunk_index": i,
                         "filename": file.filename,
-                        "session_id": session_id
+                        "file_id": file_id,
+                        "session_id": session_id,
+                        "upload_date": upload_date,
+                        "file_size": file_size
                     },
                     class_name="Documents",
                     vector=embedding  # Manually provide Cohere embedding
@@ -113,9 +130,12 @@ async def upload_document(file: UploadFile = File(...)):
         return {
             "message": "Document uploaded and processed successfully",
             "session_id": session_id,
+            "file_id": file_id,
             "filename": file.filename,
             "total_chunks": len(chunks),
-            "document_length": len(full_text)
+            "document_length": len(full_text),
+            "file_size": file_size,
+            "upload_date": upload_date
         }
     
     except ValueError as e:
@@ -126,11 +146,13 @@ async def upload_document(file: UploadFile = File(...)):
 @app.post("/chat")
 async def chat(question: str = Form(...), session_id: str = Form(...)):
     """
-    Answer a question about the uploaded document.
+    Answer a question about the uploaded documents.
     
+    - Works across all files in the session
     - Embeds the question
     - Retrieves relevant chunks from Weaviate
-    - Generates answer using OpenAI with retrieved context
+    - Generates answer using Cohere with retrieved context
+    - Supports natural conversation and document queries
     """
     try:
         if not question.strip():
@@ -189,7 +211,29 @@ async def chat(question: str = Form(...), session_id: str = Form(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing question: {str(e)}")
 
-@app.delete("/session/{session_id}")
+@app.get("/sessions/{session_id}/files")
+async def get_files(session_id: str):
+    """Get all files in a session"""
+    try:
+        files = get_session_files(weaviate_client, session_id)
+        return {
+            "session_id": session_id,
+            "files": files,
+            "total_files": len(files)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving files: {str(e)}")
+
+@app.delete("/files/{file_id}")
+async def delete_file(file_id: str):
+    """Delete a specific file and all its chunks"""
+    try:
+        delete_file_documents(weaviate_client, file_id)
+        return {"message": f"File {file_id} deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
+
+@app.delete("/sessions/{session_id}")
 async def delete_session(session_id: str):
     """Delete all documents for a session"""
     try:
@@ -204,5 +248,11 @@ async def health():
     return {
         "status": "ok",
         "weaviate": "connected" if weaviate_client else "disconnected",
-        "openai_key": "configured" if os.getenv("OPENAI_API_KEY") else "missing"
+        "cohere_key": "configured" if os.getenv("COHERE_API_KEY") else "missing",
+        "features": {
+            "multiple_files": True,
+            "supported_formats": [".txt", ".pdf", ".docx"],
+            "multilingual": True,
+            "languages": ["English", "French", "Arabic", "100+ more"]
+        }
     }

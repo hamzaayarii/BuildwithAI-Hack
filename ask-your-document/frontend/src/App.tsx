@@ -1,32 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FileUpload from './components/FileUpload';
+import FileManager from './components/FileManager';
 import ChatWindow, { Message } from './components/ChatWindow';
 import ChatInput from './components/ChatInput';
-import { uploadDocument, askQuestion } from './services/api';
-import { FileText, AlertCircle } from 'lucide-react';
+import { uploadDocument, askQuestion, getSessionFiles, deleteFile, deleteSession, FileInfo } from './services/api';
+import { FileText, AlertCircle, Trash2, Plus, MessageCircle, FolderOpen, Sparkles } from 'lucide-react';
 import './index.css';
 
 function App() {
   const [sessionId, setSessionId] = useState<string>('');
-  const [filename, setFilename] = useState<string>('');
+  const [files, setFiles] = useState<FileInfo[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [showUpload, setShowUpload] = useState(false);
+
+  // Load files when session exists
+  useEffect(() => {
+    if (sessionId) {
+      loadFiles();
+    }
+  }, [sessionId]);
+
+  const loadFiles = async () => {
+    try {
+      const response = await getSessionFiles(sessionId);
+      setFiles(response.files);
+    } catch (err) {
+      console.error('Error loading files:', err);
+    }
+  };
 
   const handleUpload = async (file: File) => {
     setLoading(true);
     setError('');
 
     try {
-      const response = await uploadDocument(file);
-      setSessionId(response.session_id);
-      setFilename(response.filename);
-      setMessages([
-        {
-          role: 'system',
-          content: `✅ Document uploaded: ${response.filename}\n📄 ${response.total_chunks} chunks created\n📊 ${response.document_length} characters processed\n\nYou can now ask questions about this document!`,
-        },
-      ]);
+      const response = await uploadDocument(file, sessionId || undefined);
+      
+      // Set or keep session ID
+      if (!sessionId) {
+        setSessionId(response.session_id);
+        setMessages([
+          {
+            role: 'system',
+            content: `👋 Welcome! I'm your AI document assistant.\n\n✅ Successfully uploaded: ${response.filename}\n📊 Processed ${response.total_chunks} chunks\n\nI can help you:\n• Answer questions about your documents\n• Summarize content\n• Find specific information\n• Chat naturally in English, French, Arabic, and more!\n\nFeel free to ask me anything or just say hi! 💬`,
+          },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'system',
+            content: `✅ Added new document: ${response.filename}\n📊 ${response.total_chunks} chunks processed\n\nYou can now ask questions across all your uploaded documents!`,
+          },
+        ]);
+      }
+
+      // Reload files list
+      await loadFiles();
+      setShowUpload(false);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to upload document');
       console.error('Upload error:', err);
@@ -63,7 +96,7 @@ function App() {
         ...prev,
         {
           role: 'assistant',
-          content: '❌ Sorry, I encountered an error processing your question. Please try again.',
+          content: '❌ Sorry, I encountered an error. Please try again.',
         },
       ]);
     } finally {
@@ -71,24 +104,75 @@ function App() {
     }
   };
 
+  const handleDeleteFile = async (fileId: string) => {
+    if (!confirm('Are you sure you want to delete this file?')) return;
+
+    try {
+      await deleteFile(fileId);
+      await loadFiles();
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'system',
+          content: '🗑️ File deleted successfully',
+        },
+      ]);
+    } catch (err: any) {
+      setError('Failed to delete file');
+      console.error('Delete error:', err);
+    }
+  };
+
+  const handleNewSession = async () => {
+    if (sessionId && !confirm('Start a new session? This will clear all current documents.')) {
+      return;
+    }
+
+    try {
+      if (sessionId) {
+        await deleteSession(sessionId);
+      }
+      setSessionId('');
+      setFiles([]);
+      setMessages([]);
+      setShowUpload(false);
+    } catch (err) {
+      console.error('Error clearing session:', err);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-3">
-              <FileText className="w-10 h-10 text-blue-600" />
-              <h1 className="text-4xl font-bold text-gray-800">Ask Your Document</h1>
+              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-2xl shadow-lg">
+                <FileText className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Ask Your Documents
+              </h1>
             </div>
-            <p className="text-gray-600">
-              Upload a document and chat with it using AI-powered RAG
+            <p className="text-gray-600 text-lg">
+              AI-powered document chat • Multiple files • 100+ languages 🌍
             </p>
+            <div className="flex items-center justify-center gap-4 mt-4 text-sm text-gray-500">
+              <span className="flex items-center gap-1">
+                <Sparkles className="w-4 h-4" />
+                Smart RAG
+              </span>
+              <span>•</span>
+              <span>.txt, .pdf, .docx</span>
+              <span>•</span>
+              <span>Powered by Cohere</span>
+            </div>
           </div>
 
           {/* Error Alert */}
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+            <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-xl p-4 flex items-start gap-3 animate-fade-in">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="font-semibold text-red-800">Error</h3>
@@ -98,58 +182,117 @@ function App() {
           )}
 
           {/* Main Content */}
-          <div className="bg-white rounded-xl shadow-lg p-6 space-y-6">
-            {/* Upload Section */}
-            {!sessionId && (
-              <div>
-                <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                  Upload Your Document
-                </h2>
-                <FileUpload onUpload={handleUpload} loading={loading} disabled={loading} />
-              </div>
-            )}
-
-            {/* Document Info */}
-            {sessionId && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
-                  <span className="font-semibold">Current Document:</span> {filename}
-                </p>
-                <button
-                  onClick={() => {
-                    setSessionId('');
-                    setFilename('');
-                    setMessages([]);
-                  }}
-                  className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
-                >
-                  Upload a different document
-                </button>
-              </div>
-            )}
-
-            {/* Chat Section */}
-            {sessionId && (
-              <>
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                    Chat with Your Document
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Sidebar - File Management */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-2xl shadow-xl p-6 sticky top-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <FolderOpen className="w-5 h-5 text-indigo-500" />
+                    Documents
                   </h2>
-                  <ChatWindow messages={messages} />
+                  {sessionId && (
+                    <button
+                      onClick={handleNewSession}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Clear all and start new"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
 
-                <ChatInput
-                  onSend={handleAsk}
-                  disabled={!sessionId}
-                  loading={loading}
-                />
-              </>
-            )}
+                {!sessionId || showUpload ? (
+                  <div>
+                    <FileUpload 
+                      onUpload={handleUpload} 
+                      loading={loading} 
+                      disabled={loading}
+                      hasSession={!!sessionId}
+                    />
+                    {sessionId && (
+                      <button
+                        onClick={() => setShowUpload(false)}
+                        className="mt-3 w-full text-sm text-gray-600 hover:text-gray-800"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <FileManager 
+                      files={files} 
+                      onDelete={handleDeleteFile} 
+                      loading={loading}
+                    />
+                    <button
+                      onClick={() => setShowUpload(true)}
+                      className="mt-4 w-full bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-600 px-4 py-3 rounded-xl hover:from-indigo-100 hover:to-purple-100 transition-all duration-300 font-semibold flex items-center justify-center gap-2 border-2 border-indigo-200 hover:border-indigo-300"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Add More Documents
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Main Chat Area */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl shadow-xl p-6 space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <MessageCircle className="w-5 h-5 text-indigo-500" />
+                    Chat
+                  </h2>
+                  {files.length > 0 && (
+                    <span className="text-sm text-gray-500">
+                      {files.length} {files.length === 1 ? 'document' : 'documents'} loaded
+                    </span>
+                  )}
+                </div>
+
+                {!sessionId ? (
+                  <div className="h-[500px] flex items-center justify-center text-center">
+                    <div>
+                      <div className="bg-gradient-to-br from-indigo-100 to-purple-100 p-8 rounded-full w-32 h-32 mx-auto mb-6 flex items-center justify-center">
+                        <FileText className="w-16 h-16 text-indigo-500" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-700 mb-3">
+                        Upload Documents to Start
+                      </h3>
+                      <p className="text-gray-500 max-w-md mx-auto">
+                        Upload one or multiple documents (.txt, .pdf, .docx) to start asking questions across all of them!
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <ChatWindow messages={messages} />
+                    <ChatInput
+                      onSend={handleAsk}
+                      disabled={!sessionId || files.length === 0}
+                      loading={loading}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Footer */}
           <div className="text-center mt-8 text-sm text-gray-500">
-            <p>Powered by Weaviate, OpenAI, FastAPI & React</p>
+            <p className="flex items-center justify-center gap-2">
+              Powered by 
+              <span className="font-semibold text-indigo-600">Weaviate</span>
+              •
+              <span className="font-semibold text-purple-600">Cohere</span>
+              •
+              <span className="font-semibold text-blue-600">FastAPI</span>
+              •
+              <span className="font-semibold text-cyan-600">React</span>
+            </p>
           </div>
         </div>
       </div>

@@ -1,5 +1,13 @@
 # Backend Setup Guide
 
+## Features
+- ✅ **Multiple File Upload** - Upload multiple documents to one session
+- ✅ **File Management** - View, list, and delete files
+- ✅ **Multi-format Support** - .txt, .pdf, .docx files
+- ✅ **Multilingual** - English, French, Arabic, and 100+ languages
+- ✅ **Natural Conversation** - Chat naturally, not just document Q&A
+- ✅ **Smart RAG** - Retrieval-Augmented Generation with Cohere
+
 ## Prerequisites
 - Python 3.8+
 - Weaviate instance (local or cloud)
