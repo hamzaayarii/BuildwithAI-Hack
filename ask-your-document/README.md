@@ -31,6 +31,8 @@
 - [License](#-license)
 
 ---
+## 🎯 Architechture
+<img width="1568" height="723" alt="image" src="https://github.com/user-attachments/assets/42207d29-46ec-4888-bae2-0d5b59876fb9" />
 
 ## 🎯 Overview
 
